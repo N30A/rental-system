@@ -1,12 +1,12 @@
 USE master;
 
-IF DB_ID('EventRentalDB') IS NULL
+IF DB_ID('RentalSystemDB') IS NULL
 BEGIN
-	CREATE DATABASE EventRentalDB;
+	CREATE DATABASE RentalSystemDB;
 END
 
 GO
-USE EventRentalDB;
+USE RentalSystemDB;
 
 IF NOT EXISTS (SELECT name FROM sys.tables WHERE name = 'Address')
 BEGIN
