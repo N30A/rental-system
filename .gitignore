@@ -1,1 +1,16 @@
+# Drawio
 *.bkp
+
+# Visual Studio
+.vs
+bin/
+obj/
+
+# VS Code
+.vscode
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
