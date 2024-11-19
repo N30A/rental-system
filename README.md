@@ -1,1 +1,1 @@
-**Rental System** är ett internt system som hanterar alla aspekter av verksamhet, inklusive uthyrning, lagerhantering, kundinformation och personalhantering.
+**Rental System** är ett internt system som hanterar alla aspekter av verksamheten, inklusive uthyrning, lagerhantering, kundinformation och personalhantering.
