@@ -24,7 +24,7 @@ END
 IF NOT EXISTS (SELECT name FROM sys.tables WHERE name = 'Premise')
 BEGIN
 	CREATE TABLE Premise (
-		PremiseID INT PRIMARY KEY,
+		PremiseID INT IDENTITY PRIMARY KEY,
 		Name VARCHAR(50) NOT NULL UNIQUE,
 		AddressID INT NOT NULL UNIQUE,
 
@@ -35,7 +35,7 @@ END
 IF NOT EXISTS (SELECT name FROM sys.tables WHERE name = 'Category')
 BEGIN
 	CREATE TABLE Category (
-		CategoryID INT PRIMARY KEY,
+		CategoryID INT IDENTITY PRIMARY KEY,
 		Name NVARCHAR(50) NOT NULL,
 		ParentCategoryID INT,
 
@@ -82,7 +82,7 @@ IF NOT EXISTS (SELECT name FROM sys.tables WHERE name = 'Customer')
 BEGIN
 	CREATE TABLE Customer (
 		CustomerID INT IDENTITY PRIMARY KEY,
-		PhoneNumber NVARCHAR(20) NOT NULL UNIQUE,
+		Phone NVARCHAR(20) NOT NULL UNIQUE,
 		Email NVARCHAR(254) NOT NULL UNIQUE,
 		AddressID INT NOT NULL,
 
