@@ -5,6 +5,7 @@
 .vs
 bin/
 obj/
+*.csproj.user
 
 # VS Code
 .vscode
@@ -14,3 +15,6 @@ obj/
 
 # Windows
 Thumbs.db
+
+# Other
+.env
