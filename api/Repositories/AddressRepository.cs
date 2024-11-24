@@ -56,7 +56,7 @@ namespace api.Repositories
                 Address? address = await _connection.QuerySingleOrDefaultAsync<Address>(query, new { AddressID = id });
                 if (address == null)
                 {
-                    return Result<Address>.FailureResult($"The address with id {id} was not found.");
+                    return Result<Address>.FailureResult($"The address with id {id} was not found.", ErrorCodes.NotFound);
                 }
 
                 return Result<Address>.SuccessResult(address);
@@ -64,7 +64,7 @@ namespace api.Repositories
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Unexpected error while retrieving the specified address.");
-                return Result<Address>.FailureResult("An error occured while retrieving the address.");
+                return Result<Address>.FailureResult("An error occured while retrieving the address.", ErrorCodes.UnexpectedError);
             }
         }
 
@@ -89,12 +89,12 @@ namespace api.Repositories
             catch (SqlException ex) when (ex.Number == (int)SqlErrorNumbers.UniqueConstraintViolation)
             {
                 _logger.LogWarning($"{ex.Message} ErrorNumber: {ex.Number}");
-                return Result<Address>.FailureResult("The address already exists.");
+                return Result<Address>.FailureResult("This address already exists, duplicates not allowed.", ErrorCodes.UniqueConflict);
             }
             catch (SqlException ex)
             {   
                 _logger.LogError(ex, "Unexpected error when creating an address");
-                return Result<Address>.FailureResult("An error occured while creating the address.");
+                return Result<Address>.FailureResult("An error occured while creating the address.", ErrorCodes.UnexpectedError);
             }
         }
 
@@ -142,7 +142,7 @@ namespace api.Repositories
                 if (address == null)
                 {
                     _logger.LogWarning("Tried to update an address but it was not found.");
-                    return Result<Address>.FailureResult("Unable to update the specified address, it was not found.");
+                    return Result<Address>.FailureResult($"The address with id {id} was not found.", ErrorCodes.NotFound);
                 }
                 
                 return Result<Address>.SuccessResult(address);
@@ -150,7 +150,7 @@ namespace api.Repositories
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Unexpected error when updating the address");
-                return Result<Address>.FailureResult("An error occurred error when updating the address");
+                return Result<Address>.FailureResult("An error occurred error when updating the address", ErrorCodes.UnexpectedError);
             }
         }
 
@@ -166,7 +166,7 @@ namespace api.Repositories
                 int rowsAffected = await _connection.ExecuteAsync(deleteQuery, new { AddressID = id });
                 if (rowsAffected <= 0)
                 {
-                    return Result<Address>.FailureResult("Unable to delete the specified address, it was not found.");
+                    return Result<Address>.FailureResult($"The address with id {id} was not found.", ErrorCodes.NotFound);
                 }
 
                 return Result<Address>.SuccessResult();
@@ -174,7 +174,7 @@ namespace api.Repositories
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Unexpected error when deleting the address");
-                return Result<Address>.FailureResult("An error occurred error when deleting the address");
+                return Result<Address>.FailureResult("An error occurred error when deleting the address", ErrorCodes.UnexpectedError);
             }
         }
     }
