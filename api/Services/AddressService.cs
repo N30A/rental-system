@@ -3,6 +3,7 @@ using api.Models.Domain;
 using api.Models.Dtos;
 using api.Repositories.Interfaces;
 using api.Services.Interfaces;
+using Azure.Core;
 
 namespace api.Services
 {
@@ -86,12 +87,44 @@ namespace api.Services
 
         public async Task<Result<AddressResponse>> UpdateAddressByIDAsync(int id, UpdateAddressRequest request)
         {
-            throw new NotImplementedException();
+            Result<Address> result = await _repository.UpdateAddressByIDAsync(id, request);
+            if (!result.Success)
+            {
+                _logger.LogError($"Failed to update address with id {id}: {result.Message}");
+                return Result<AddressResponse>.FailureResult(result.Message);
+            }
+
+            var addressResponse = new AddressResponse
+            {
+                AddressID = result.Data.AddressID,
+                Street = result.Data.Street,
+                PostalCode = result.Data.PostalCode,
+                City = result.Data.City,
+                Country = result.Data.Country,
+            };
+
+            return Result<AddressResponse>.SuccessResult(addressResponse);
         }
 
-        public async Task<Result<AddressResponse>> DeleteAddressAsync(int id)
+        public async Task<Result<AddressResponse>> DeleteAddressByAsync(int id)
         {
-            throw new NotImplementedException();
+            Result<Address> result = await _repository.DeleteAddressByIDAsync(id);
+            if (!result.Success)
+            {
+                _logger.LogError($"Failed to delete address with id {id}: {result.Message}");
+                return Result<AddressResponse>.FailureResult(result.Message);
+            }
+
+            var addressResponse = new AddressResponse
+            {
+                AddressID = result.Data.AddressID,
+                Street = result.Data.Street,
+                PostalCode = result.Data.PostalCode,
+                City = result.Data.City,
+                Country = result.Data.Country,
+            };
+
+            return Result<AddressResponse>.SuccessResult(addressResponse);
         } 
     }
 }
