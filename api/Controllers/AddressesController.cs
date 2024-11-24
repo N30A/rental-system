@@ -1,15 +1,14 @@
 using System.Data;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using FluentValidation.Results;
-using api.Repositories;
-using api.Repositories.Exceptions;
 using Microsoft.Data.SqlClient;
 using FluentValidation;
-using System.Reflection.Metadata;
-using api.Models.Dtos;
+using FluentValidation.Results;
+using api.Models;
 using api.Models.Domain;
+using api.Models.Dtos;
 using api.Validators;
+using api.Services.Interfaces;
 
 namespace api.Controllers
 {
@@ -18,7 +17,7 @@ namespace api.Controllers
     public class AddressesController : ControllerBase
     {   
         private readonly ILogger<AddressesController> _logger;
-        private readonly AddressRepository _repository;
+        private readonly IAddressService _service;
         private readonly AddressCreateValidator _createValidator;
         private readonly AddressUpdateValidator _updateValidator;
 
@@ -39,19 +38,19 @@ namespace api.Controllers
 
         public AddressesController(
             ILogger<AddressesController> logger,
-            AddressRepository repository,
+            IAddressService service,
             AddressCreateValidator createValidator,
             AddressUpdateValidator updateValidator
         )
         {   
             _logger = logger;
-            _repository = repository;
+            _service = service;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetAddresses([FromQuery] string sort = "addressid", [FromQuery] string order = "asc")
+        public async Task<ActionResult<MultipleAddressesResponse>> GetAddresses([FromQuery] string sort = "addressid", [FromQuery] string order = "asc")
         {
             if (string.IsNullOrWhiteSpace(sort) || string.IsNullOrWhiteSpace(order))
             {
@@ -75,12 +74,9 @@ namespace api.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            try
-            {
-                IEnumerable<Address> addresses = await _repository.GetAddressesAsync(sortColumn, sortOrder);
-                return Ok(addresses);
-            }
-            catch (SqlException)
+            Result<MultipleAddressesResponse> result = await _service.GetAddressesAsync(sortColumn, sortOrder);
+            
+            if (!result.Success)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
                 {
@@ -89,150 +85,152 @@ namespace api.Controllers
                     Status = StatusCodes.Status500InternalServerError,
                 });
             }
+
+            return Ok(result.Data);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult> GetAddressByID(int id)
         {   
-            try
-            {
-                Address? address = await _repository.GetAddressByIDAsync(id);
-                if (address == null)
+            Result<AddressResponse> result = await _service.GetAddressByIDAsync(id);
+            if (!result.Success)
+            {   
+                switch (result.Error)
                 {
-                    return NotFound(new ProblemDetails
-                    {
-                        Title = "Address not found",
-                        Detail = "The specified address was not found.",
-                        Status = StatusCodes.Status404NotFound
-                    });
-                }
+                    case ErrorCodes.NotFound:
+                        return NotFound(new ProblemDetails
+                        {
+                            Title = "Address not found",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status404NotFound
+                        });
 
-                return Ok(address);
+                    default:
+                        return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                        {
+                            Title = "Internal error",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status500InternalServerError
+                        });
+                }
             }
-            catch (SqlException)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Title = "Internal error",
-                    Detail = "An unexpected error occurred while fetching the specified address.",
-                    Status = StatusCodes.Status500InternalServerError
-                });
-            }
+
+            return Ok(result.Data);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Address>> CreateAddress([FromBody] CreateAddressRequest body)
+        public async Task<ActionResult<Address>> CreateAddress([FromBody] CreateAddressRequest request)
         {   
-            var results = _createValidator.Validate(body);
-            if (!results.IsValid)
+            var validationResult = _createValidator.Validate(request);
+            if (!validationResult.IsValid)
             {
-                results.Errors.ForEach(error =>
+                validationResult.Errors.ForEach(error =>
                 {
                     ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
                 });
                 return ValidationProblem(ModelState);
             }
 
-            try
+            Result<AddressResponse> result = await _service.CreateAddressAsync(request);
+            if (!result.Success)
             {
-                Address address = await _repository.CreateAddressAsync(body);
-                return CreatedAtAction(nameof(GetAddressByID), new { id = address.AddressID }, address);
-            }
-            catch (UniqueConstraintException ex)
-            {
-                return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+                switch (result.Error)
                 {
-                    Title = "Already exists",
-                    Detail = ex.Message,
-                    Status = StatusCodes.Status409Conflict
-                });
+                    case ErrorCodes.UniqueConflict:
+                        return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+                        {
+                            Title = "Already exists",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status409Conflict
+                        });
+
+                    default:
+                        return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                        {
+                            Title = "Internal error",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status500InternalServerError
+                        });
+                }
             }
-            catch (SqlException)
-            {   
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Title = "Internal error",
-                    Detail = "An unexpected error occurred while creating the specified address.",
-                    Status = StatusCodes.Status500InternalServerError
-                });
-            } 
+
+            return CreatedAtAction(nameof(GetAddressByID), new { id = result.Data?.AddressID }, result?.Data);
         }
 
         [HttpPut("{id:int}")]
         public async Task<ActionResult<Address>> UpdateAddress(int id, [FromBody] UpdateAddressRequest body)
         {
-            var results = _updateValidator.Validate(body);
-            if (!results.IsValid)
+            var validationResults = _updateValidator.Validate(body);
+            if (!validationResults.IsValid)
             {
-                results.Errors.ForEach(error =>
+                validationResults.Errors.ForEach(error =>
                 {
                     ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
                 });
                 return ValidationProblem(ModelState);
             }
 
-            try
-            {
-                Address? address = await _repository.UpdateAddressByIDAsync(id, body);
-                if (address == null)
+            Result<AddressResponse> result = await _service.UpdateAddressByIDAsync(id, body);
+            if (!result.Success)
+            {   
+                switch (result.Error)
                 {
-                    return NotFound(new ProblemDetails
-                    {
-                        Title = "Address not found",
-                        Detail = "The specified address was not found.",
-                        Status = StatusCodes.Status404NotFound
-                    });
-                }
+                    case ErrorCodes.NotFound:
+                        return NotFound(new ProblemDetails
+                        {
+                            Title = "Address not found",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status404NotFound
+                        });
 
-                return CreatedAtAction(nameof(GetAddressByID), new { id = address.AddressID }, address);
+                    case ErrorCodes.UniqueConflict:
+                        return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+                        {
+                            Title = "Already exists",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status409Conflict
+                        });
+
+                    default:
+                        return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                        {
+                            Title = "Internal error",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status500InternalServerError
+                        });
+                }
             }
-            catch (UniqueConstraintException ex)
-            {
-                return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
-                {
-                    Title = "Already exists",
-                    Detail = ex.Message,
-                    Status = StatusCodes.Status409Conflict
-                });
-            }
-            catch (SqlException)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Title = "Internal error",
-                    Detail = "An unexpected error occurred while creating the specified address.",
-                    Status = StatusCodes.Status500InternalServerError
-                });
-            }
+
+            return CreatedAtAction(nameof(GetAddressByID), new { id = result.Data?.AddressID }, result.Data);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteAddressByID(int id)
         {
-            try
-            {
-                bool status = await _repository.DeleteAddressAsync(id);
-                if (!status)
+            Result<AddressResponse> result = await _service.DeleteAddressByIDAsync(id);
+            if (!result.Success)
+            {   
+                switch (result.Error)
                 {
-                    return NotFound(new ProblemDetails
-                    {
-                        Title = "Address not found",
-                        Detail = "The specified address was not found.",
-                        Status = StatusCodes.Status404NotFound
-                    });
-                }
+                    case ErrorCodes.NotFound:
+                        return NotFound(new ProblemDetails
+                        {
+                            Title = "Address not found",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status404NotFound
+                        });
 
-                return NoContent();
+                    default:
+                        return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                        {
+                            Title = "Internal error",
+                            Detail = result.Message,
+                            Status = StatusCodes.Status500InternalServerError
+                        });
+                }
             }
-            catch (SqlException)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
-                {
-                    Title = "Internal error",
-                    Detail = "An unexpected error occurred while fetching the specified address.",
-                    Status = StatusCodes.Status500InternalServerError
-                });
-            }
+
+            return NoContent();
         }
     }
 }
