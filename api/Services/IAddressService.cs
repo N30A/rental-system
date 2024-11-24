@@ -14,6 +14,6 @@ namespace api.Services
 
         Task<Result<AddressResponse>> UpdateAddressByIDAsync(int id, UpdateAddressRequest request);
 
-        Task<Result<Address>> DeleteAddressAsync(int id);
+        Task<Result<AddressResponse>> DeleteAddressAsync(int id);
     }
 }
