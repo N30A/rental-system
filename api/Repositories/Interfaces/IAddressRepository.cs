@@ -2,7 +2,7 @@
 using api.Models.Domain;
 using api.Models.Dto;
 
-namespace api.Repositories
+namespace api.Repositories.Interfaces
 {
     public interface IAddressRepository
     {
