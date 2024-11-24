@@ -14,6 +14,6 @@ namespace api.Repositories.Interfaces
 
         Task<Result<Address>> UpdateAddressByIDAsync(int id, UpdateAddressRequest request);
 
-        Task<Result<Address>> DeleteAddressAsync(int id);
+        Task<Result<Address>> DeleteAddressByIDAsync(int id);
     }
 }

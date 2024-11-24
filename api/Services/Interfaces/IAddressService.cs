@@ -13,6 +13,6 @@ namespace api.Services.Interfaces
 
         Task<Result<AddressResponse>> UpdateAddressByIDAsync(int id, UpdateAddressRequest request);
 
-        Task<Result<AddressResponse>> DeleteAddressAsync(int id);
+        Task<Result<AddressResponse>> DeleteAddressByIDAsync(int id);
     }
 }
