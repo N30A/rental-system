@@ -13,10 +13,11 @@ namespace api
             builder.Configuration.AddEnvironmentVariables();
 
             builder.Services.AddDatabase(builder.Configuration, builder.Environment);
-            builder.Services.AddRepositories();
             builder.Services.AddValidators();
-
             builder.Services.AddControllers();
+            builder.Services.AddServices();
+            builder.Services.AddRepositories();
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddRouting(options => options.LowercaseUrls = true);

@@ -1,5 +1,8 @@
 ﻿using System.Data;
 using api.Repositories;
+using api.Repositories.Interfaces;
+using api.Services;
+using api.Services.Interfaces;
 using api.Validators;
 using Microsoft.Data.SqlClient;
 
@@ -41,17 +44,23 @@ namespace api
             return services;
         }
 
-        public static IServiceCollection AddRepositories(this IServiceCollection services)
-        {
-            services.AddScoped<AddressRepository>();
-
-            return services;
-        }
-
         public static IServiceCollection AddValidators(this IServiceCollection services)
         {
             services.AddScoped<AddressCreateValidator>();
             services.AddScoped<AddressUpdateValidator>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddServices(this IServiceCollection services)
+        {
+            services.AddScoped<IAddressService, AddressService>();
+
+            return services;
+        }
+        public static IServiceCollection AddRepositories(this IServiceCollection services)
+        {
+            services.AddScoped<IAddressRepository, AddressRepository>();
 
             return services;
         }
