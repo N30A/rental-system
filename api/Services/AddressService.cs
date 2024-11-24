@@ -3,7 +3,6 @@ using api.Models.Domain;
 using api.Models.Dtos;
 using api.Repositories.Interfaces;
 using api.Services.Interfaces;
-using Azure.Core;
 
 namespace api.Services
 {
@@ -106,7 +105,7 @@ namespace api.Services
             return Result<AddressResponse>.SuccessResult(addressResponse);
         }
 
-        public async Task<Result<AddressResponse>> DeleteAddressByAsync(int id)
+        public async Task<Result<AddressResponse>> DeleteAddressByIDAsync(int id)
         {
             Result<Address> result = await _repository.DeleteAddressByIDAsync(id);
             if (!result.Success)
@@ -125,6 +124,6 @@ namespace api.Services
             };
 
             return Result<AddressResponse>.SuccessResult(addressResponse);
-        } 
+        }
     }
 }
