@@ -1,14 +1,14 @@
-﻿using Dapper;
-using System.Data;
+﻿using System.Data;
+using Dapper;
 using Microsoft.Data.SqlClient;
-using api.Repositories.Exceptions;
-using Microsoft.AspNetCore.Mvc;
+using api.Models;
 using api.Models.Dtos;
 using api.Models.Domain;
+using api.Repositories.Interfaces;
 
 namespace api.Repositories
 {
-    public class AddressRepository
+    public class AddressRepository : IAddressRepository
     {
         private readonly IDbConnection _connection;
         private readonly ILogger<AddressRepository> _logger;
@@ -19,7 +19,7 @@ namespace api.Repositories
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Address>> GetAddressesAsync(string sortColumn, string sortOrder)
+        public async Task<Result<IEnumerable<Address>>> GetAddressesAsync(string sortColumn, string sortOrder)
         {
             string query = @"
                 DECLARE @Query NVARCHAR(MAX);
@@ -31,22 +31,19 @@ namespace api.Repositories
                 EXEC sp_executesql @Query;
             ";
 
-            var parameters = new DynamicParameters();
-            parameters.Add("@SortColumn", sortColumn);
-            parameters.Add("@SortOrder", sortOrder);
-
             try
             {
-                return await _connection.QueryAsync<Address>(query, parameters);
+                IEnumerable<Address> addresses = await _connection.QueryAsync<Address>(query, new { SortColumn = sortColumn, SortOrder = sortOrder });
+                return Result<IEnumerable<Address>>.SuccessResult(addresses);
             }
             catch (SqlException ex)
-            {
-                _logger.LogError(ex, "Unexpected error when retrieving addresses");
-                throw;
+            {   
+                _logger.LogError(ex, "Unexpected database error occurred while retrieving addresses.");
+                return Result<IEnumerable<Address>>.FailureResult("An error occurred while retrieving addresses.");
             }
         }
 
-        public async Task<Address?> GetAddressByIDAsync(int id)
+        public async Task<Result<Address>> GetAddressByIDAsync(int id)
         {
             string query = @"
                 SELECT AddressID, Street, PostalCode, City, Country
@@ -56,16 +53,22 @@ namespace api.Repositories
 
             try
             {   
-                return await _connection.QuerySingleOrDefaultAsync<Address>(query, new { AddressID = id });
+                Address? address = await _connection.QuerySingleOrDefaultAsync<Address>(query, new { AddressID = id });
+                if (address == null)
+                {
+                    return Result<Address>.FailureResult($"The address with id {id} was not found.");
+                }
+
+                return Result<Address>.SuccessResult(address);
             }
             catch (SqlException ex)
             {
-                _logger.LogError(ex, "Unexpected error when retrieving the specified address");
-                throw;
+                _logger.LogError(ex, "Unexpected error while retrieving the specified address.");
+                return Result<Address>.FailureResult("An error occured while retrieving the address.");
             }
         }
 
-        public async Task<Address> CreateAddressAsync(CreateAddressRequest addressCreate)
+        public async Task<Result<Address>> CreateAddressAsync(CreateAddressRequest addressCreate)
         {
             string insertQuery = @"
                 INSERT INTO Address (Street, PostalCode, City, Country)
@@ -80,21 +83,22 @@ namespace api.Repositories
 
             try
             {   
-                return await _connection.QuerySingleAsync<Address>(insertQuery, addressCreate);
+                Address address = await _connection.QuerySingleAsync<Address>(insertQuery, addressCreate);
+                return Result<Address>.SuccessResult(address);
             }
-            catch (SqlException ex) when (ex.Number == UniqueConstraintException.Number)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorNumbers.UniqueConstraintViolation)
             {
                 _logger.LogWarning($"{ex.Message} ErrorNumber: {ex.Number}");
-                throw new UniqueConstraintException("The address already exists.", ex);
+                return Result<Address>.FailureResult("The address already exists.");
             }
             catch (SqlException ex)
             {   
                 _logger.LogError(ex, "Unexpected error when creating an address");
-                throw;
+                return Result<Address>.FailureResult("An error occured while creating the address.");
             }
         }
 
-        public async Task<Address?> UpdateAddressByIDAsync(int id, UpdateAddressRequest addressUpdate)
+        public async Task<Result<Address>> UpdateAddressByIDAsync(int id, UpdateAddressRequest addressUpdate)
         {
             string updateQuery = @"
                 UPDATE Address
@@ -124,25 +128,33 @@ namespace api.Repositories
                 WHERE AddressID = @AddressID;
             ";
 
-            var parameters = new DynamicParameters();
-            parameters.Add("@AddressID", id);
-            parameters.Add("@Street", addressUpdate.Street);
-            parameters.Add("@PostalCode", addressUpdate.PostalCode);
-            parameters.Add("@City", addressUpdate.City);
-            parameters.Add("@Country", addressUpdate.Country);
-
             try
             {   
-                return await _connection.QuerySingleOrDefaultAsync<Address>(updateQuery, parameters);
+                Address? address = await _connection.QuerySingleOrDefaultAsync<Address>(updateQuery, new
+                {
+                    AddressID = id,
+                    addressUpdate.Street,
+                    addressUpdate.PostalCode,
+                    addressUpdate.City,
+                    addressUpdate.Country
+                });
+
+                if (address == null)
+                {
+                    _logger.LogWarning("Tried to update an address but it was not found.");
+                    return Result<Address>.FailureResult("Unable to update the specified address, it was not found.");
+                }
+                
+                return Result<Address>.SuccessResult(address);
             }
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Unexpected error when updating the address");
-                throw;
+                return Result<Address>.FailureResult("An error occurred error when updating the address");
             }
         }
 
-        public async Task<bool> DeleteAddressAsync(int id)
+        public async Task<Result<Address>> DeleteAddressByIDAsync(int id)
         {
             string deleteQuery = @"
                 DELETE FROM Address
@@ -152,12 +164,17 @@ namespace api.Repositories
             try
             {
                 int rowsAffected = await _connection.ExecuteAsync(deleteQuery, new { AddressID = id });
-                return rowsAffected > 0;
+                if (rowsAffected <= 0)
+                {
+                    return Result<Address>.FailureResult("Unable to delete the specified address, it was not found.");
+                }
+
+                return Result<Address>.SuccessResult();
             }
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Unexpected error when deleting the address");
-                throw;
+                return Result<Address>.FailureResult("An error occurred error when deleting the address");
             }
         }
     }
