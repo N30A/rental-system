@@ -24,7 +24,23 @@ namespace api.Services
 
         public async Task<Result<AddressResponse>> GetAddressByIDAsync(int id)
         {
-            throw new NotImplementedException();
+            Result<Address> result = await _repository.GetAddressByIDAsync(id);
+            if (!result.Success)
+            {
+                _logger.LogError($"Failed to retrieve address with id {id}: {result.Message}");
+                return Result<AddressResponse>.FailureResult(result.Message);
+            }
+
+            var addressResponse = new AddressResponse
+            {
+                AddressID = result.Data.AddressID,
+                Street = result.Data.Street,
+                PostalCode = result.Data.PostalCode,
+                City = result.Data.City,
+                Country = result.Data.Country,
+            };
+
+            return Result<AddressResponse>.SuccessResult(addressResponse);
         }
 
         public async Task<Result<MultipleAddressesResponse>> GetAddressesAsync(string sortColumn, string sortOrder)
