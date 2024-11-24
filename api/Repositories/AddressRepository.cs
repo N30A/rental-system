@@ -3,7 +3,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using api.Repositories.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using api.Models.Dto;
+using api.Models.Dtos;
 using api.Models.Domain;
 
 namespace api.Repositories

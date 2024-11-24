@@ -1,5 +1,5 @@
 ﻿using api.Models;
-using api.Models.Dto;
+using api.Models.Dtos;
 
 namespace api.Services.Interfaces
 {

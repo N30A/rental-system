@@ -1,6 +1,6 @@
 ﻿using api.Models;
 using api.Models.Domain;
-using api.Models.Dto;
+using api.Models.Dtos;
 
 namespace api.Repositories.Interfaces
 {

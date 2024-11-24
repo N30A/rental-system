@@ -1,4 +1,4 @@
-﻿using api.Models.Dto;
+﻿using api.Models.Dtos;
 using FluentValidation;
 
 namespace api.Validators

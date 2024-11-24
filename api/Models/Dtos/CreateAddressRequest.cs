@@ -1,4 +1,4 @@
-﻿namespace api.Models.Dto
+﻿namespace api.Models.Dtos
 {
     public class CreateAddressRequest
     {

@@ -7,7 +7,7 @@ using api.Repositories.Exceptions;
 using Microsoft.Data.SqlClient;
 using FluentValidation;
 using System.Reflection.Metadata;
-using api.Models.Dto;
+using api.Models.Dtos;
 using api.Models.Domain;
 using api.Validators;
 
