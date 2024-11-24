@@ -1,7 +1,7 @@
-﻿using api.Dto;
+﻿using api.Models.Dto;
 using FluentValidation;
 
-namespace api.Dto.Validators
+namespace api.Validators
 {
     public class AddressUpdateValidator : AbstractValidator<AddressUpdate>
     {

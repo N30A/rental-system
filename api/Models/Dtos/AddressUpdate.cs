@@ -1,4 +1,4 @@
-﻿namespace api.Dto
+﻿namespace api.Models.Dto
 {
     public class AddressUpdate
     {

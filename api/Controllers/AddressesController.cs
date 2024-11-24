@@ -1,8 +1,5 @@
 using System.Data;
 using Dapper;
-using api.Models;
-using api.Dto;
-using api.Dto.Validators;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation.Results;
 using api.Repositories;
@@ -10,6 +7,9 @@ using api.Repositories.Exceptions;
 using Microsoft.Data.SqlClient;
 using FluentValidation;
 using System.Reflection.Metadata;
+using api.Models.Dto;
+using api.Models.Domain;
+using api.Validators;
 
 namespace api.Controllers
 {

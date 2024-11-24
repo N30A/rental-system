@@ -1,13 +1,12 @@
-﻿namespace api.Models
+﻿namespace api.Models.Dto
 {
-    public class Address
+    public class AddressCreate
     {
-        public int AddressID { get; set; }
         public string Street { get; set; }
         public string PostalCode { get; set; }
         public string City { get; set; }
         public string Country { get; set; }
 
-        public Address() { }
+        public AddressCreate() { }
     }
 }

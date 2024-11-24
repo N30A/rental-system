@@ -1,6 +1,6 @@
 ﻿using System.Data;
-using api.Dto.Validators;
 using api.Repositories;
+using api.Validators;
 using Microsoft.Data.SqlClient;
 
 namespace api
