@@ -19,7 +19,23 @@ namespace api.Services
 
         public async Task<Result<AddressResponse>> CreateAddressAsync(CreateAddressRequest request)
         {
-            throw new NotImplementedException();
+            Result<Address> result = await _repository.CreateAddressAsync(request);
+            if (!result.Success)
+            {
+                _logger.LogError($"Failed to create address: {result.Message}");
+                return Result<AddressResponse>.FailureResult(result.Message);
+            }
+
+            var addressResponse = new AddressResponse
+            {
+                AddressID = result.Data.AddressID,
+                Street = result.Data.Street,
+                PostalCode = result.Data.PostalCode,
+                City = result.Data.City,
+                Country = result.Data.Country,
+            };
+
+            return Result<AddressResponse>.SuccessResult(addressResponse);
         }
 
         public async Task<Result<AddressResponse>> GetAddressByIDAsync(int id)
