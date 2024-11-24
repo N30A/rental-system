@@ -23,7 +23,7 @@ namespace api.Services
             if (!result.Success)
             {
                 _logger.LogError($"Failed to create address: {result.Message}");
-                return Result<AddressResponse>.FailureResult(result.Message);
+                return Result<AddressResponse>.FailureResult(result.Message, result.Error);
             }
 
             var addressResponse = new AddressResponse
@@ -44,7 +44,7 @@ namespace api.Services
             if (!result.Success)
             {
                 _logger.LogError($"Failed to retrieve address with id {id}: {result.Message}");
-                return Result<AddressResponse>.FailureResult(result.Message);
+                return Result<AddressResponse>.FailureResult(result.Message, result.Error);
             }
 
             var addressResponse = new AddressResponse
@@ -65,7 +65,7 @@ namespace api.Services
             if (!result.Success)
             {
                 _logger.LogError($"Failed to retrieve addresses: {result.Message}");
-                return Result<MultipleAddressesResponse>.FailureResult(result.Message);
+                return Result<MultipleAddressesResponse>.FailureResult(result.Message, result.Error);
             }
 
             var addresses = new MultipleAddressesResponse
@@ -90,7 +90,7 @@ namespace api.Services
             if (!result.Success)
             {
                 _logger.LogError($"Failed to update address with id {id}: {result.Message}");
-                return Result<AddressResponse>.FailureResult(result.Message);
+                return Result<AddressResponse>.FailureResult(result.Message, result.Error);
             }
 
             var addressResponse = new AddressResponse
@@ -111,7 +111,7 @@ namespace api.Services
             if (!result.Success)
             {
                 _logger.LogError($"Failed to delete address with id {id}: {result.Message}");
-                return Result<AddressResponse>.FailureResult(result.Message);
+                return Result<AddressResponse>.FailureResult(result.Message, result.Error);
             }
 
             var addressResponse = new AddressResponse
