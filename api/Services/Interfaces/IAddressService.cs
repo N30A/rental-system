@@ -1,8 +1,7 @@
 ﻿using api.Models;
-using api.Models.Domain;
 using api.Models.Dto;
 
-namespace api.Services
+namespace api.Services.Interfaces
 {
     public interface IAddressService
     {
