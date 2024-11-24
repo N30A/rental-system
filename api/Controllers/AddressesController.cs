@@ -121,7 +121,7 @@ namespace api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Address>> CreateAddress([FromBody] AddressCreate body)
+        public async Task<ActionResult<Address>> CreateAddress([FromBody] CreateAddressRequest body)
         {   
             var results = _createValidator.Validate(body);
             if (!results.IsValid)
@@ -159,7 +159,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<ActionResult<Address>> UpdateAddress(int id, [FromBody] AddressUpdate body)
+        public async Task<ActionResult<Address>> UpdateAddress(int id, [FromBody] UpdateAddressRequest body)
         {
             var results = _updateValidator.Validate(body);
             if (!results.IsValid)

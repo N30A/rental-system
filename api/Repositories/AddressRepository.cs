@@ -1,10 +1,10 @@
 ﻿using Dapper;
-using api.Models;
-using api.Dto;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using api.Repositories.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using api.Models.Dto;
+using api.Models.Domain;
 
 namespace api.Repositories
 {
@@ -55,7 +55,7 @@ namespace api.Repositories
             ";
 
             try
-            {
+            {   
                 return await _connection.QuerySingleOrDefaultAsync<Address>(query, new { AddressID = id });
             }
             catch (SqlException ex)
@@ -65,7 +65,7 @@ namespace api.Repositories
             }
         }
 
-        public async Task<Address> CreateAddressAsync(AddressCreate addressCreate)
+        public async Task<Address> CreateAddressAsync(CreateAddressRequest addressCreate)
         {
             string insertQuery = @"
                 INSERT INTO Address (Street, PostalCode, City, Country)
@@ -94,7 +94,7 @@ namespace api.Repositories
             }
         }
 
-        public async Task<Address?> UpdateAddressByIDAsync(int id, AddressUpdate addressUpdate)
+        public async Task<Address?> UpdateAddressByIDAsync(int id, UpdateAddressRequest addressUpdate)
         {
             string updateQuery = @"
                 UPDATE Address

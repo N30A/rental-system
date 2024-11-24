@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace api.Validators
 {
-    public class AddressUpdateValidator : AbstractValidator<AddressUpdate>
+    public class AddressUpdateValidator : AbstractValidator<UpdateAddressRequest>
     {
         public AddressUpdateValidator()
         {

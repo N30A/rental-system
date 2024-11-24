@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace api.Validators
 {
-    public class AddressCreateValidator : AbstractValidator<AddressCreate>
+    public class AddressCreateValidator : AbstractValidator<CreateAddressRequest>
     {
         public AddressCreateValidator()
         {
