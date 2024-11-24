@@ -29,7 +29,27 @@ namespace api.Services
 
         public async Task<Result<MultipleAddressesResponse>> GetAddressesAsync(string sortColumn, string sortOrder)
         {
-            throw new NotImplementedException();
+            Result<IEnumerable<Address>> result = await _repository.GetAddressesAsync(sortColumn, sortOrder);
+            if (!result.Success)
+            {
+                _logger.LogError($"Failed to retrieve addresses: {result.Message}");
+                return Result<MultipleAddressesResponse>.FailureResult(result.Message);
+            }
+
+            var addresses = new MultipleAddressesResponse
+            {
+                Data = result.Data.Select(a => new AddressResponse
+                {
+                    AddressID = a.AddressID,
+                    Street = a.Street,
+                    PostalCode = a.PostalCode,
+                    City = a.City,
+                    Country = a.Country,
+
+                }).ToList(),
+            };
+
+            return Result<MultipleAddressesResponse>.SuccessResult(addresses);
         }
 
         public async Task<Result<AddressResponse>> UpdateAddressByIDAsync(int id, UpdateAddressRequest request)
